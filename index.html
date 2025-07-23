@@ -13,6 +13,7 @@
             font-family: 'Inter', sans-serif;
             background-color: #f9fafb; /* Warm Neutral: bg-gray-50 */
             color: #1f2937; /* text-gray-800 */
+            overflow-x: hidden;
         }
         .main-container {
             background-color: #ffffff;
@@ -37,8 +38,8 @@
             max-width: 900px;
             margin-left: auto;
             margin-right: auto;
-            height: 40vh;
-            max-height: 450px;
+            height: 30vh;
+            max-height: 350px;
         }
         .stat-card {
             background-color: #ffffff;
@@ -58,32 +59,64 @@
             color: #3b82f6; /* Accent Color: Blue */
         }
         .btn {
-            padding: 0.75rem 1.5rem;
+            padding: 0.5rem 1rem;
             border-radius: 0.5rem;
             font-weight: 600;
             transition: all 0.2s ease-in-out;
-            border: none;
+            border: 1px solid transparent;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
         .btn-primary {
-            background-color: #3b82f6; /* bg-blue-500 */
+            background-color: #3b82f6;
             color: white;
         }
         .btn-primary:hover {
-            background-color: #2563eb; /* bg-blue-600 */
+            background-color: #2563eb;
+        }
+        .btn-secondary {
+            background-color: #ffffff;
+            color: #374151;
+            border-color: #d1d5db;
+        }
+        .btn-secondary:hover {
+            background-color: #f3f4f6;
         }
         .btn-danger {
-            background-color: #ef4444; /* bg-red-500 */
+            background-color: #ef4444;
             color: white;
         }
         .btn-danger:hover {
-            background-color: #dc2626; /* bg-red-600 */
+            background-color: #dc2626;
         }
-        .section-intro {
-            color: #4b5563; /* text-gray-600 */
-            max-width: 48rem; /* max-w-3xl */
-            margin: 0 auto 1.5rem auto; /* mx-auto mb-6 */
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 28px;}
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;}
+        input:checked + .slider { background-color: #3b82f6; }
+        input:checked + .slider:before { transform: translateX(22px); }
+        .status-toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 500;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s, transform 0.5s;
+            pointer-events: none;
         }
+        .status-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-20px);
+        }
+        .status-toast.success { background-color: #22c55e; }
+        .status-toast.error { background-color: #ef4444; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -96,124 +129,169 @@
     -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 
-    <div class="w-full max-w-7xl mx-auto main-container p-6 md:p-8">
+    <div class="w-full max-w-screen-2xl mx-auto main-container p-6 md:p-8">
         <header class="text-center mb-8">
             <h1 class="text-4xl font-bold header-title">Interactive Analysis: Playing Snake with Reinforcement Learning</h1>
-            <p class="text-lg header-subtitle mt-2">An interactive web application based on the research by Pan et al. Now using Double DQN.</p>
+            <p class="text-lg header-subtitle mt-2">An interactive web application featuring an advanced "Rainbow-like" DQN Agent.</p>
         </header>
 
         <main>
-            <!-- Section 1: Live Simulation & Controls -->
-            <section class="mb-8">
-                <h2 class="text-2xl font-bold text-center mb-4">Live Simulation Environment</h2>
-                <p class="text-center section-intro">
-                    This section provides a real-time view of the agent playing Snake. The agent now uses a **Double Deep Q-Network (DDQN)** to learn, which helps reduce value overestimation and leads to more stable training. Click "Start Training" to observe the agent.
-                </p>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-1 content-panel p-6">
-                        <h3 class="text-xl font-semibold text-center mb-4">Controls</h3>
-                        <div class="flex justify-center">
-                            <button id="trainBtn" class="btn btn-primary w-full">Start Training</button>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column: Game and Controls -->
+                <div class="lg:col-span-1 flex flex-col gap-6">
+                    <div class="content-panel p-6 flex justify-center items-center">
+                        <canvas id="gameCanvas" width="400" height="400"></canvas>
+                    </div>
+                    <div class="content-panel p-6">
+                        <h3 class="text-xl font-semibold text-center mb-4">Control Center</h3>
+                        <div class="space-y-4">
+                            <button id="trainBtn" class="btn btn-primary w-full text-lg py-3">Start Training</button>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button id="saveBtn" class="btn btn-secondary">Save</button>
+                                <button id="loadBtn" class="btn btn-secondary">Load</button>
+                                <button id="downloadBtn" class="btn btn-secondary">Export</button>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <label for="evalToggle" class="font-medium">Evaluation Mode</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="evalToggle">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                             <div class="flex flex-col">
+                                <label for="speedSlider" class="font-medium mb-1">Speed: <span id="speedValue">30</span> fps</label>
+                                <input id="speedSlider" type="range" min="1" max="120" value="30" class="w-full">
+                            </div>
                         </div>
                     </div>
-                    <div class="lg:col-span-2 content-panel p-6 flex justify-center items-center">
-                         <canvas id="gameCanvas" width="400" height="400"></canvas>
+                     <div class="content-panel p-6">
+                        <h3 class="text-xl font-semibold text-center mb-4">Live Statistics</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="stat-card">
+                                <div class="stat-label">Episode</div>
+                                <div id="episode-stat" class="stat-value">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Score</div>
+                                <div id="score-stat" class="stat-value">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Avg. Q-Value</div>
+                                <div id="q-value-stat" class="stat-value">0.00</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-label">Epsilon</div>
+                                <div id="epsilon-stat" class="stat-value">1.00</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </section>
 
-            <!-- Section 2: Performance Analysis -->
-            <section>
-                <h2 class="text-2xl font-bold text-center mb-4">Performance Analysis</h2>
-                 <p class="text-center section-intro">
-                    Here, you can track the agent's learning progress quantitatively. The statistics provide an instantaneous snapshot of the current training state, while the chart visualizes the agent's score over many episodes, directly corresponding to the performance graphs in the research paper.
-                </p>
-                <div class="content-panel p-6 mb-6">
-                    <h3 class="text-xl font-semibold text-center mb-4">Live Statistics</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div class="stat-card">
-                            <div class="stat-label">Episode</div>
-                            <div id="episode-stat" class="stat-value">0</div>
+                <!-- Right Column: Charts -->
+                <div class="lg:col-span-2 flex flex-col gap-6">
+                    <div class="content-panel p-6">
+                         <h3 class="text-xl font-semibold text-center mb-4">Training Progress</h3>
+                        <div class="chart-container">
+                            <canvas id="scoreChart"></canvas>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-label">Score</div>
-                            <div id="score-stat" class="stat-value">0</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">Total Score</div>
-                            <div id="total-score-stat" class="stat-value">0</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">Epsilon (Explore Rate)</div>
-                            <div id="epsilon-stat" class="stat-value">1.00</div>
+                    </div>
+                    <div class="content-panel p-6">
+                         <h3 class="text-xl font-semibold text-center mb-4">Performance & Diagnostic Metrics</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="chart-container"><canvas id="actionChart"></canvas></div>
+                            <div class="chart-container"><canvas id="stepsChart"></canvas></div>
+                            <div class="chart-container"><canvas id="epsilonChart"></canvas></div>
+                            <div class="chart-container"><canvas id="lossChart"></canvas></div>
                         </div>
                     </div>
                 </div>
-                <div class="content-panel p-6">
-                     <h3 class="text-xl font-semibold text-center mb-4">Training Progress</h3>
-                    <div class="chart-container">
-                        <canvas id="scoreChart"></canvas>
-                    </div>
-                </div>
-            </section>
+            </div>
         </main>
     </div>
+    <div id="statusToast" class="status-toast"></div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            await tf.setBackend('webgl');
+            
+            class DuelingLayer extends tf.layers.Layer {
+                constructor(config) { super(config); }
+                computeOutputShape(inputShape) { return inputShape[1]; }
+                call(inputs, kwargs) {
+                    return tf.tidy(() => {
+                        const [value, advantages] = inputs;
+                        const meanAdvantages = tf.mean(advantages, 1, true);
+                        const centeredAdvantages = advantages.sub(meanAdvantages);
+                        return value.add(centeredAdvantages);
+                    });
+                }
+                static get className() { return 'DuelingLayer'; }
+            }
+            tf.serialization.registerClass(DuelingLayer);
+
             const GRID_SIZE = 20;
             const TILE_SIZE = 400 / GRID_SIZE;
-            const LEARNING_RATE = 0.0005;
-            const GAMMA = 0.95;
+            const LEARNING_RATE = 0.001;
+            const GAMMA = 0.99;
             const EPSILON_START = 1.0;
             const EPSILON_END = 0.01;
-            const EPSILON_DECAY = 0.997;
-            const REPLAY_BUFFER_SIZE = 10000;
-            const BATCH_SIZE = 128;
-            const TARGET_UPDATE_FREQUENCY = 5;
+            const EPSILON_DECAY = 0.9995;
+            const REPLAY_BUFFER_SIZE = 20000;
+            const BATCH_SIZE = 64;
+            const TARGET_UPDATE_FREQUENCY = 1000;
+            const TRAINING_FREQUENCY = 4;
+            const N_STEP = 3; 
+            const PER_ALPHA = 0.6;
+            const PER_BETA_START = 0.4;
+            const PER_BETA_FRAMES = 100000;
+            const PER_EPSILON = 1e-6;
             const STATE_SIZE = 40;
             const ACTION_SIZE = 3;
 
             const canvas = document.getElementById('gameCanvas');
             const ctx = canvas.getContext('2d');
             const trainBtn = document.getElementById('trainBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const loadBtn = document.getElementById('loadBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const evalToggle = document.getElementById('evalToggle');
+            const speedSlider = document.getElementById('speedSlider');
+            const speedValue = document.getElementById('speedValue');
             const episodeStat = document.getElementById('episode-stat');
             const scoreStat = document.getElementById('score-stat');
-            const totalScoreStat = document.getElementById('total-score-stat');
+            const qValueStat = document.getElementById('q-value-stat');
             const epsilonStat = document.getElementById('epsilon-stat');
+            const statusToast = document.getElementById('statusToast');
 
             let isTraining = false;
+            let isEvaluating = false;
             let animationFrameId;
+            let gameSpeed = 30;
 
-            const chartCtx = document.getElementById('scoreChart').getContext('2d');
-            const scoreChart = new Chart(chartCtx, {
+            const createLineChart = (elementId, label) => new Chart(document.getElementById(elementId).getContext('2d'), {
                 type: 'line',
+                data: { labels: [], datasets: [{ label: label, data: [], borderColor: 'rgba(59, 130, 246, 0.7)', tension: 0.4, pointRadius: 0, }, { label: 'Moving Average (50)', data: [], borderColor: 'rgba(239, 68, 68, 0.8)', borderWidth: 2, tension: 0.4, pointRadius: 0, }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { title: { display: true, text: 'Episode', color: '#4b5563' }, ticks: { color: '#6b7280' } }, y: { title: { display: true, text: label, color: '#4b5563' }, ticks: { color: '#6b7280' } } }, plugins: { legend: { labels: { color: '#4b5563' } } } }
+            });
+
+            const scoreChart = createLineChart('scoreChart', 'Score');
+            const lossChart = createLineChart('lossChart', 'Loss');
+            const stepsChart = createLineChart('stepsChart', 'Steps per Episode');
+            const epsilonChart = createLineChart('epsilonChart', 'Epsilon');
+            
+            const actionChart = new Chart(document.getElementById('actionChart').getContext('2d'), {
+                type: 'bar',
                 data: {
-                    labels: [],
+                    labels: ['Straight', 'Left', 'Right'],
                     datasets: [{
-                        label: 'Score per Episode',
-                        data: [],
-                        borderColor: 'rgba(59, 130, 246, 0.5)',
-                        tension: 0.1,
-                        pointRadius: 0,
-                    }, {
-                        label: 'Moving Average (50 episodes)',
-                        data: [],
-                        borderColor: 'rgba(239, 68, 68, 1)',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        pointRadius: 0,
+                        label: 'Action Distribution',
+                        data: [0, 0, 0],
+                        backgroundColor: ['rgba(59, 130, 246, 0.5)', 'rgba(239, 68, 68, 0.5)', 'rgba(34, 197, 94, 0.5)'],
+                        borderColor: ['rgba(59, 130, 246, 1)', 'rgba(239, 68, 68, 1)', 'rgba(34, 197, 94, 1)'],
+                        borderWidth: 1
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { title: { display: true, text: 'Episode', color: '#4b5563' }, ticks: { color: '#6b7280' } },
-                        y: { title: { display: true, text: 'Score', color: '#4b5563' }, ticks: { color: '#6b7280' } }
-                    },
-                    plugins: { legend: { labels: { color: '#4b5563' } } }
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
             class SnakeGame {
@@ -228,9 +306,7 @@
                 }
                 generateFood() {
                     let foodPos;
-                    do {
-                        foodPos = { x: Math.floor(Math.random() * GRID_SIZE), y: Math.floor(Math.random() * GRID_SIZE) };
-                    } while (this.isCollidingWithSnake(foodPos));
+                    do { foodPos = { x: Math.floor(Math.random() * GRID_SIZE), y: Math.floor(Math.random() * GRID_SIZE) }; } while (this.isCollidingWithSnake(foodPos));
                     return foodPos;
                 }
                 isCollidingWithSnake(pos) { return this.snake.some(segment => segment.x === pos.x && segment.y === pos.y); }
@@ -243,34 +319,29 @@
                     const oldDist = Math.abs(this.snake[0].x - this.food.x) + Math.abs(this.snake[0].y - this.food.y);
                     if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE || this.isCollidingWithSnake(head)) {
                         this.gameOver = true;
-                        reward = -24;
+                        reward = -1;
                         return { state: this.getState(), reward, done: this.gameOver, score: this.score };
                     }
                     this.snake.unshift(head);
                     if (head.x === this.food.x && head.y === this.food.y) {
                         this.score++;
-                        reward = 20;
+                        reward = 5;
                         this.food = this.generateFood();
                     } else {
                         this.snake.pop();
                         const newDist = Math.abs(head.x - this.food.x) + Math.abs(head.y - this.food.y);
-                        reward = newDist < oldDist ? 0.3 : -0.5;
+                        reward = newDist < oldDist ? 0.01 : -0.01;
                     }
                     return { state: this.getState(), reward, done: this.gameOver, score: this.score };
                 }
                 getState() {
                     const head = this.snake[0];
                     const state = [];
-                    const directions = [
-                        { x: 1, y: 0 }, { x: 1, y: -1 }, { x: 0, y: -1 }, { x: -1, y: -1 },
-                        { x: -1, y: 0 }, { x: -1, y: 1 }, { x: 0, y: 1 }, { x: 1, y: 1 }
-                    ];
+                    const directions = [ { x: 1, y: 0 }, { x: 1, y: -1 }, { x: 0, y: -1 }, { x: -1, y: -1 }, { x: -1, y: 0 }, { x: -1, y: 1 }, { x: 0, y: 1 }, { x: 1, y: 1 } ];
                     for (const dir of directions) {
                         let pos = { x: head.x + dir.x, y: head.y + dir.y };
                         let dist = 1;
-                        while (pos.x >= 0 && pos.x < GRID_SIZE && pos.y >= 0 && pos.y < GRID_SIZE) {
-                            pos.x += dir.x; pos.y += dir.y; dist++;
-                        }
+                        while (pos.x >= 0 && pos.x < GRID_SIZE && pos.y >= 0 && pos.y < GRID_SIZE) { pos.x += dir.x; pos.y += dir.y; dist++; }
                         state.push(1 / dist);
                         pos = { x: head.x + dir.x, y: head.y + dir.y };
                         dist = 1;
@@ -301,106 +372,181 @@
             class DQNAgent {
                 constructor() {
                     this.epsilon = EPSILON_START;
+                    this.beta = PER_BETA_START;
                     this.replayBuffer = [];
+                    this.priorities = [];
+                    this.nStepBuffer = [];
+                    this.bufferIndex = 0;
                     this.model = this.createModel();
                     this.targetModel = this.createModel();
                     this.updateTargetModel();
+                    this.totalQ = 0;
+                    this.qCount = 0;
                 }
                 createModel() {
-                    const model = tf.sequential();
-                    model.add(tf.layers.dense({ inputShape: [STATE_SIZE], units: 128, activation: 'relu' }));
-                    model.add(tf.layers.dense({ units: 128, activation: 'relu' }));
-                    model.add(tf.layers.dense({ units: ACTION_SIZE, activation: 'linear' }));
-                    model.compile({ optimizer: tf.train.adam(LEARNING_RATE), loss: 'meanSquaredError' });
+                    const input = tf.input({shape: [STATE_SIZE]});
+                    const common = tf.layers.dense({units: 64, activation: 'relu'}).apply(input);
+                    const hidden = tf.layers.dense({units: 64, activation: 'relu'}).apply(common);
+                    const valueStream = tf.layers.dense({units: 32, activation: 'relu'}).apply(hidden);
+                    const value = tf.layers.dense({units: 1}).apply(valueStream);
+                    const advantageStream = tf.layers.dense({units: 32, activation: 'relu'}).apply(hidden);
+                    const advantages = tf.layers.dense({units: ACTION_SIZE}).apply(advantageStream);
+                    const qValues = new DuelingLayer({}).apply([value, advantages]);
+                    const model = tf.model({inputs: input, outputs: qValues});
+                    model.compile({optimizer: tf.train.adam(LEARNING_RATE), loss: tf.losses.huberLoss});
                     return model;
                 }
                 updateTargetModel() { this.targetModel.setWeights(this.model.getWeights()); }
                 remember(state, action, reward, nextState, done) {
-                    this.replayBuffer.push({ state, action, reward, nextState, done });
-                    if (this.replayBuffer.length > REPLAY_BUFFER_SIZE) this.replayBuffer.shift();
+                    this.nStepBuffer.push({state, action, reward});
+                    if (this.nStepBuffer.length < N_STEP) return;
+                    let R = 0;
+                    for(let i = 0; i < N_STEP; i++) { R += this.nStepBuffer[i].reward * (GAMMA ** i); }
+                    const { state: firstState, action: firstAction } = this.nStepBuffer.shift();
+                    const experience = { state: firstState, action: firstAction, reward: R, nextState, done };
+                    const maxPriority = this.priorities.length > 0 ? Math.max(...this.priorities) : 1;
+                    if (this.replayBuffer.length < REPLAY_BUFFER_SIZE) {
+                        this.replayBuffer.push(experience);
+                        this.priorities.push(maxPriority);
+                    } else {
+                        this.replayBuffer[this.bufferIndex] = experience;
+                        this.priorities[this.bufferIndex] = maxPriority;
+                        this.bufferIndex = (this.bufferIndex + 1) % REPLAY_BUFFER_SIZE;
+                    }
                 }
                 chooseAction(state) {
-                    if (Math.random() <= this.epsilon) return Math.floor(Math.random() * ACTION_SIZE);
+                    if (!isEvaluating && Math.random() <= this.epsilon) return Math.floor(Math.random() * ACTION_SIZE);
                     return tf.tidy(() => this.model.predict(tf.tensor2d([state])).argMax(1).dataSync()[0]);
                 }
                 async replay() {
-                    if (this.replayBuffer.length < BATCH_SIZE) return;
-                    const miniBatch = Array.from({ length: BATCH_SIZE }, () => this.replayBuffer[Math.floor(Math.random() * this.replayBuffer.length)]);
-                    
-                    const states = miniBatch.map(e => e.state);
-                    const nextStates = miniBatch.map(e => e.nextState);
-                    
+                    if (this.replayBuffer.length < BATCH_SIZE) return null;
+                    const { indices, batch, weights } = this.getMiniBatch();
+                    const states = batch.map(e => e.state);
+                    const nextStates = batch.map(e => e.nextState);
                     const statesTensor = tf.tensor2d(states);
                     const nextStatesTensor = tf.tensor2d(nextStates);
-
-                    const currentQ = await this.model.predict(statesTensor).array();
-                    
-                    // Double DQN: Use main model to select actions, target model to evaluate them
-                    const mainModelNextQ = await this.model.predict(nextStatesTensor).array();
-                    const targetModelNextQ = await this.targetModel.predict(nextStatesTensor).array();
-
-                    for (let i = 0; i < miniBatch.length; i++) {
-                        const { action, reward, done } = miniBatch[i];
-                        if (done) {
-                            currentQ[i][action] = reward;
-                        } else {
-                            // Find the best action for the next state using the main model
-                            const bestNextAction = mainModelNextQ[i].indexOf(Math.max(...mainModelNextQ[i]));
-                            // Get the Q-value for that action from the target model
-                            const targetQValue = targetModelNextQ[i][bestNextAction];
-                            currentQ[i][action] = reward + GAMMA * targetQValue;
+                    const mainModelNextQ = this.model.predict(nextStatesTensor);
+                    const targetModelNextQ = this.targetModel.predict(nextStatesTensor);
+                    const currentQ_tensor = this.model.predict(statesTensor);
+                    const [mainModelNextQData, targetModelNextQData, currentQData] = await Promise.all([ mainModelNextQ.array(), targetModelNextQ.array(), currentQ_tensor.array() ]);
+                    const errors = [];
+                    for (let i = 0; i < batch.length; i++) {
+                        const { action, reward, done } = batch[i];
+                        const oldQ = currentQData[i][action];
+                        if (done) { currentQData[i][action] = reward; } 
+                        else {
+                            const bestNextAction = mainModelNextQData[i].indexOf(Math.max(...mainModelNextQData[i]));
+                            const targetQValue = targetModelNextQData[i][bestNextAction];
+                            currentQData[i][action] = reward + (GAMMA ** N_STEP) * targetQValue;
                         }
+                        errors.push(Math.abs(oldQ - currentQData[i][action]));
+                        this.totalQ += currentQData[i][action];
+                        this.qCount++;
                     }
-
-                    const newQValuesTensor = tf.tensor2d(currentQ);
-                    await this.model.fit(statesTensor, newQValuesTensor, { verbose: 0 });
-
-                    statesTensor.dispose();
-                    nextStatesTensor.dispose();
-                    newQValuesTensor.dispose();
+                    for (let i = 0; i < indices.length; i++) { this.priorities[indices[i]] = (errors[i] + PER_EPSILON) ** PER_ALPHA; }
+                    const newQValuesTensor = tf.tensor2d(currentQData);
+                    let loss = null;
+                    const history = await this.model.fit(statesTensor, newQValuesTensor, { verbose: 0, batchSize: BATCH_SIZE, callbacks: { onEpochEnd: (epoch, logs) => { loss = logs.loss; } } });
+                    tf.dispose([statesTensor, nextStatesTensor, mainModelNextQ, targetModelNextQ, currentQ_tensor, newQValuesTensor]);
+                    return loss;
                 }
-                decayEpsilon() { if (this.epsilon > EPSILON_END) this.epsilon *= EPSILON_DECAY; }
+                getMiniBatch() {
+                    const totalPriority = this.priorities.reduce((a, b) => a + b, 0);
+                    const probabilities = this.priorities.map(p => p / totalPriority);
+                    const indices = []; const batch = []; const weights = [];
+                    for (let i = 0; i < BATCH_SIZE; i++) {
+                        const rand = Math.random();
+                        let cumulativeProb = 0; let index = -1;
+                        for (let j = 0; j < probabilities.length; j++) {
+                            cumulativeProb += probabilities[j];
+                            if (rand <= cumulativeProb) { index = j; break; }
+                        }
+                        indices.push(index);
+                        batch.push(this.replayBuffer[index]);
+                        const samplingProb = probabilities[index];
+                        const weight = (this.replayBuffer.length * samplingProb) ** -this.beta;
+                        weights.push(weight);
+                    }
+                    const maxWeight = Math.max(...weights);
+                    const normalizedWeights = weights.map(w => w / maxWeight);
+                    return { indices, batch, weights: normalizedWeights };
+                }
+                decayEpsilon() { if (this.epsilon > EPSILON_END) { this.epsilon *= EPSILON_DECAY; } }
+                async saveModel(url) { await this.model.save(url); }
+                async loadModel(url) { this.model = await tf.loadLayersModel(url); this.updateTargetModel(); }
             }
 
             const game = new SnakeGame();
             const agent = new DQNAgent();
             let episode = 0;
-            let totalScore = 0;
-            let scores = [];
+            let scores = [], losses = [], stepsHistory = [], epsilonHistory = [];
+            let actionCounts = { 0: 0, 1: 0, 2: 0 };
+            let totalSteps = 0, currentEpisodeSteps = 0;
 
-            async function runEpisode() {
+            async function runStep() {
                 if (!isTraining) return;
-                let state = game.reset();
-                let done = false;
-                while (!done) {
-                    const action = agent.chooseAction(state);
-                    const result = game.step(action);
+                currentEpisodeSteps++;
+                let state = game.getState();
+                const action = agent.chooseAction(state);
+                actionCounts[action]++;
+                const result = game.step(action);
+                if (!isEvaluating) {
                     agent.remember(state, action, result.reward, result.state, result.done);
-                    state = result.state;
-                    done = result.done;
-                    game.draw();
-                    scoreStat.textContent = result.score;
-                    await new Promise(resolve => setTimeout(resolve, 1));
+                    totalSteps++;
+                    agent.decayEpsilon();
+                    if (totalSteps % TRAINING_FREQUENCY === 0) {
+                        const loss = await agent.replay();
+                        if (loss !== null) losses.push(loss);
+                    }
+                    if (totalSteps % TARGET_UPDATE_FREQUENCY === 0) { agent.updateTargetModel(); }
                 }
-                await agent.replay();
-                agent.decayEpsilon();
-                episode++;
-                totalScore += game.score;
-                scores.push(game.score);
-                updateUI();
-                if (episode % TARGET_UPDATE_FREQUENCY === 0) agent.updateTargetModel();
-                animationFrameId = requestAnimationFrame(runEpisode);
+                game.draw();
+                scoreStat.textContent = result.score;
+                if (result.done) {
+                    episode++;
+                    scores.push(game.score);
+                    stepsHistory.push(currentEpisodeSteps);
+                    epsilonHistory.push(agent.epsilon);
+                    currentEpisodeSteps = 0;
+                    updateUI();
+                    if (episode % 10 === 0) {
+                        console.log(`Ep: ${episode}, Score: ${game.score}, Epsilon: ${agent.epsilon.toFixed(3)}, AvgQ: ${(agent.totalQ / agent.qCount).toFixed(3)}`);
+                    }
+                    game.reset();
+                }
+                setTimeout(() => {
+                    animationFrameId = requestAnimationFrame(runStep);
+                }, 1000 / gameSpeed);
             }
 
             function updateUI() {
                 episodeStat.textContent = episode;
-                totalScoreStat.textContent = totalScore;
-                epsilonStat.textContent = agent.epsilon.toFixed(2);
-                const movingAvg = scores.slice(-50).reduce((a, b) => a + b, 0) / Math.min(scores.length, 50);
-                scoreChart.data.labels.push(episode);
-                scoreChart.data.datasets[0].data.push(scores[scores.length - 1]);
-                scoreChart.data.datasets[1].data.push(movingAvg);
-                scoreChart.update();
+                qValueStat.textContent = agent.qCount > 0 ? (agent.totalQ / agent.qCount).toFixed(2) : "0.00";
+                epsilonStat.textContent = isEvaluating ? "0.00" : agent.epsilon.toFixed(2);
+                
+                updateLineChart(scoreChart, scores);
+                updateLineChart(lossChart, losses);
+                updateLineChart(stepsChart, stepsHistory);
+                updateLineChart(epsilonChart, epsilonHistory, false); // No moving average for epsilon
+
+                actionChart.data.datasets[0].data = Object.values(actionCounts);
+                actionChart.update();
+            }
+            
+            function updateLineChart(chart, data, useMovingAverage = true) {
+                chart.data.labels.push(episode);
+                chart.data.datasets[0].data.push(data[data.length - 1]);
+                if(useMovingAverage) {
+                    const movingAvg = data.slice(-50).reduce((a, b) => a + b, 0) / Math.min(data.length, 50);
+                    chart.data.datasets[1].data.push(movingAvg);
+                }
+                chart.update();
+            }
+
+            function showToast(message, type = 'success') {
+                statusToast.textContent = message;
+                statusToast.className = `status-toast show ${type}`;
+                setTimeout(() => { statusToast.className = 'status-toast'; }, 3000);
             }
 
             trainBtn.addEventListener('click', () => {
@@ -408,10 +554,42 @@
                 trainBtn.textContent = isTraining ? 'Stop Training' : 'Start Training';
                 trainBtn.classList.toggle('btn-primary');
                 trainBtn.classList.toggle('btn-danger');
-                if (isTraining) runEpisode();
-                else cancelAnimationFrame(animationFrameId);
+                if (isTraining) { game.reset(); runStep(); } 
+                else { clearTimeout(animationFrameId); }
             });
             
+            saveBtn.addEventListener('click', async () => {
+                try {
+                    await agent.saveModel('indexeddb://snake-model');
+                    showToast('Model saved successfully!');
+                } catch (e) { showToast('Error saving model.', 'error'); console.error(e); }
+            });
+
+            loadBtn.addEventListener('click', async () => {
+                try {
+                    await agent.loadModel('indexeddb://snake-model');
+                    showToast('Model loaded successfully!');
+                } catch (e) { showToast('No saved model found.', 'error'); console.error(e); }
+            });
+
+            downloadBtn.addEventListener('click', async () => {
+                try {
+                    await agent.saveModel('downloads://snake-model');
+                } catch (e) { showToast('Error downloading model.', 'error'); console.error(e); }
+            });
+
+            evalToggle.addEventListener('change', (e) => { isEvaluating = e.target.checked; });
+            speedSlider.addEventListener('input', (e) => { gameSpeed = parseInt(e.target.value); speedValue.textContent = gameSpeed; });
+
+            (async () => {
+                try {
+                    await agent.loadModel('indexeddb://snake-model');
+                    showToast('Previously saved model loaded.', 'success');
+                } catch (e) {
+                    console.log("No saved model found to auto-load.");
+                }
+            })();
+
             game.draw();
         });
     </script>
