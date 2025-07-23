@@ -11,26 +11,22 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f9fafb; /* Warm Neutral: bg-gray-50 */
-            color: #1f2937; /* text-gray-800 */
+            background-color: #f9fafb;
+            color: #1f2937;
             overflow-x: hidden;
         }
         .main-container {
             background-color: #ffffff;
             border-radius: 1rem;
             box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-            border: 1px solid #e5e7eb; /* border-gray-200 */
+            border: 1px solid #e5e7eb;
         }
-        .header-title {
-            color: #111827; /* text-gray-900 */
-        }
-        .header-subtitle {
-            color: #4b5563; /* text-gray-600 */
-        }
+        .header-title { color: #111827; }
+        .header-subtitle { color: #4b5563; }
         .content-panel {
-            background-color: #f9fafb; /* bg-gray-50 */
-            border: 1px solid #e5e7eb; /* border-gray-200 */
-            border-radius: 0.75rem; /* rounded-lg */
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
         }
         .chart-container {
             position: relative;
@@ -48,16 +44,8 @@
             text-align: center;
             border: 1px solid #e5e7eb;
         }
-        .stat-label {
-            font-size: 0.875rem;
-            color: #6b7280; /* text-gray-500 */
-            font-weight: 500;
-        }
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #3b82f6; /* Accent Color: Blue */
-        }
+        .stat-label { font-size: 0.875rem; color: #6b7280; font-weight: 500; }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: #3b82f6; }
         .btn {
             padding: 0.5rem 1rem;
             border-radius: 0.5rem;
@@ -69,28 +57,12 @@
             align-items: center;
             justify-content: center;
         }
-        .btn-primary {
-            background-color: #3b82f6;
-            color: white;
-        }
-        .btn-primary:hover {
-            background-color: #2563eb;
-        }
-        .btn-secondary {
-            background-color: #ffffff;
-            color: #374151;
-            border-color: #d1d5db;
-        }
-        .btn-secondary:hover {
-            background-color: #f3f4f6;
-        }
-        .btn-danger {
-            background-color: #ef4444;
-            color: white;
-        }
-        .btn-danger:hover {
-            background-color: #dc2626;
-        }
+        .btn-primary { background-color: #3b82f6; color: white; }
+        .btn-primary:hover { background-color: #2563eb; }
+        .btn-secondary { background-color: #ffffff; color: #374151; border-color: #d1d5db; }
+        .btn-secondary:hover { background-color: #f3f4f6; }
+        .btn-danger { background-color: #ef4444; color: white; }
+        .btn-danger:hover { background-color: #dc2626; }
         .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 28px;}
@@ -111,12 +83,27 @@
             transition: opacity 0.5s, transform 0.5s;
             pointer-events: none;
         }
-        .status-toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(-20px);
-        }
+        .status-toast.show { opacity: 1; transform: translateX(-50%) translateY(-20px); }
         .status-toast.success { background-color: #22c55e; }
         .status-toast.error { background-color: #ef4444; }
+        .status-toast.info { background-color: #3b82f6; }
+        input[type="file"] { display: none; }
+        .file-upload-label {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            background-color: #ffffff;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            cursor: pointer;
+            text-align: center;
+        }
+        .file-upload-label:hover { background-color: #f3f4f6; }
+        .file-name {
+            margin-left: 0.5rem;
+            font-style: italic;
+            color: #6b7280;
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -146,10 +133,9 @@
                         <h3 class="text-xl font-semibold text-center mb-4">Control Center</h3>
                         <div class="space-y-4">
                             <button id="trainBtn" class="btn btn-primary w-full text-lg py-3">Start Training</button>
-                            <div class="grid grid-cols-3 gap-2">
-                                <button id="saveBtn" class="btn btn-secondary">Save</button>
-                                <button id="loadBtn" class="btn btn-secondary">Load</button>
-                                <button id="downloadBtn" class="btn btn-secondary">Export</button>
+                             <div class="flex flex-col space-y-2">
+                                <label for="speedSlider" class="font-medium">Speed: <span id="speedValue">30</span> fps</label>
+                                <input id="speedSlider" type="range" min="1" max="200" value="30" class="w-full">
                             </div>
                             <div class="flex items-center justify-between">
                                 <label for="evalToggle" class="font-medium">Evaluation Mode</label>
@@ -158,42 +144,44 @@
                                     <span class="slider"></span>
                                 </label>
                             </div>
-                             <div class="flex flex-col">
-                                <label for="speedSlider" class="font-medium mb-1">Speed: <span id="speedValue">30</span> fps</label>
-                                <input id="speedSlider" type="range" min="1" max="120" value="30" class="w-full">
-                            </div>
+                            <button id="resetBtn" class="btn btn-danger w-full mt-2">Reset Progress</button>
                         </div>
                     </div>
                      <div class="content-panel p-6">
-                        <h3 class="text-xl font-semibold text-center mb-4">Live Statistics</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="stat-card">
-                                <div class="stat-label">Episode</div>
-                                <div id="episode-stat" class="stat-value">0</div>
+                        <h3 class="text-xl font-semibold text-center mb-4">Model Management</h3>
+                        <div class="space-y-3">
+                             <div>
+                                <button id="downloadBtn" class="btn btn-secondary w-full">Export Model File</button>
                             </div>
-                            <div class="stat-card">
-                                <div class="stat-label">Score</div>
-                                <div id="score-stat" class="stat-value">0</div>
+                            <div>
+                                <label for="uploadJson" class="file-upload-label w-full">Upload Model (.json)</label>
+                                <input type="file" id="uploadJson" accept=".json">
+                                <span id="jsonFileName" class="file-name"></span>
                             </div>
-                            <div class="stat-card">
-                                <div class="stat-label">Avg. Q-Value</div>
-                                <div id="q-value-stat" class="stat-value">0.00</div>
+                             <div>
+                                <label for="uploadWeights" class="file-upload-label w-full">Upload Weights (.bin)</label>
+                                <input type="file" id="uploadWeights" accept=".bin">
+                                <span id="weightsFileName" class="file-name"></span>
                             </div>
-                            <div class="stat-card">
-                                <div class="stat-label">Epsilon</div>
-                                <div id="epsilon-stat" class="stat-value">1.00</div>
-                            </div>
+                             <button id="loadBtn" class="btn btn-secondary w-full">Load from Files</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right Column: Charts -->
+                <!-- Right Column: Stats and Charts -->
                 <div class="lg:col-span-2 flex flex-col gap-6">
                     <div class="content-panel p-6">
-                         <h3 class="text-xl font-semibold text-center mb-4">Training Progress</h3>
-                        <div class="chart-container">
-                            <canvas id="scoreChart"></canvas>
+                        <h3 class="text-xl font-semibold text-center mb-4">Live Statistics</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div class="stat-card"><div class="stat-label">Episode</div><div id="episode-stat" class="stat-value">0</div></div>
+                            <div class="stat-card"><div class="stat-label">Score</div><div id="score-stat" class="stat-value">0</div></div>
+                            <div class="stat-card"><div class="stat-label">Avg. Q-Value</div><div id="q-value-stat" class="stat-value">0.00</div></div>
+                            <div class="stat-card"><div class="stat-label">Epsilon</div><div id="epsilon-stat" class="stat-value">1.00</div></div>
                         </div>
+                    </div>
+                    <div class="content-panel p-6">
+                         <h3 class="text-xl font-semibold text-center mb-4">Training Progress</h3>
+                        <div class="chart-container"><canvas id="scoreChart"></canvas></div>
                     </div>
                     <div class="content-panel p-6">
                          <h3 class="text-xl font-semibold text-center mb-4">Performance & Diagnostic Metrics</h3>
@@ -251,9 +239,9 @@
             const canvas = document.getElementById('gameCanvas');
             const ctx = canvas.getContext('2d');
             const trainBtn = document.getElementById('trainBtn');
-            const saveBtn = document.getElementById('saveBtn');
             const loadBtn = document.getElementById('loadBtn');
             const downloadBtn = document.getElementById('downloadBtn');
+            const resetBtn = document.getElementById('resetBtn');
             const evalToggle = document.getElementById('evalToggle');
             const speedSlider = document.getElementById('speedSlider');
             const speedValue = document.getElementById('speedValue');
@@ -262,10 +250,14 @@
             const qValueStat = document.getElementById('q-value-stat');
             const epsilonStat = document.getElementById('epsilon-stat');
             const statusToast = document.getElementById('statusToast');
+            const uploadJsonInput = document.getElementById('uploadJson');
+            const uploadWeightsInput = document.getElementById('uploadWeights');
+            const jsonFileName = document.getElementById('jsonFileName');
+            const weightsFileName = document.getElementById('weightsFileName');
 
             let isTraining = false;
             let isEvaluating = false;
-            let animationFrameId;
+            let simulationInterval;
             let gameSpeed = 30;
 
             const createLineChart = (elementId, label) => new Chart(document.getElementById(elementId).getContext('2d'), {
@@ -281,16 +273,7 @@
             
             const actionChart = new Chart(document.getElementById('actionChart').getContext('2d'), {
                 type: 'bar',
-                data: {
-                    labels: ['Straight', 'Left', 'Right'],
-                    datasets: [{
-                        label: 'Action Distribution',
-                        data: [0, 0, 0],
-                        backgroundColor: ['rgba(59, 130, 246, 0.5)', 'rgba(239, 68, 68, 0.5)', 'rgba(34, 197, 94, 0.5)'],
-                        borderColor: ['rgba(59, 130, 246, 1)', 'rgba(239, 68, 68, 1)', 'rgba(34, 197, 94, 1)'],
-                        borderWidth: 1
-                    }]
-                },
+                data: { labels: ['Straight', 'Left', 'Right'], datasets: [{ label: 'Action Distribution', data: [0, 0, 0], backgroundColor: ['rgba(59, 130, 246, 0.5)', 'rgba(239, 68, 68, 0.5)', 'rgba(34, 197, 94, 0.5)'], borderColor: ['rgba(59, 130, 246, 1)', 'rgba(239, 68, 68, 1)', 'rgba(34, 197, 94, 1)'], borderWidth: 1 }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
@@ -382,6 +365,7 @@
                     this.updateTargetModel();
                     this.totalQ = 0;
                     this.qCount = 0;
+                    this.isReplaying = false;
                 }
                 createModel() {
                     const input = tf.input({shape: [STATE_SIZE]});
@@ -419,36 +403,42 @@
                     return tf.tidy(() => this.model.predict(tf.tensor2d([state])).argMax(1).dataSync()[0]);
                 }
                 async replay() {
-                    if (this.replayBuffer.length < BATCH_SIZE) return null;
-                    const { indices, batch, weights } = this.getMiniBatch();
-                    const states = batch.map(e => e.state);
-                    const nextStates = batch.map(e => e.nextState);
-                    const statesTensor = tf.tensor2d(states);
-                    const nextStatesTensor = tf.tensor2d(nextStates);
-                    const mainModelNextQ = this.model.predict(nextStatesTensor);
-                    const targetModelNextQ = this.targetModel.predict(nextStatesTensor);
-                    const currentQ_tensor = this.model.predict(statesTensor);
-                    const [mainModelNextQData, targetModelNextQData, currentQData] = await Promise.all([ mainModelNextQ.array(), targetModelNextQ.array(), currentQ_tensor.array() ]);
-                    const errors = [];
-                    for (let i = 0; i < batch.length; i++) {
-                        const { action, reward, done } = batch[i];
-                        const oldQ = currentQData[i][action];
-                        if (done) { currentQData[i][action] = reward; } 
-                        else {
-                            const bestNextAction = mainModelNextQData[i].indexOf(Math.max(...mainModelNextQData[i]));
-                            const targetQValue = targetModelNextQData[i][bestNextAction];
-                            currentQData[i][action] = reward + (GAMMA ** N_STEP) * targetQValue;
+                    if (this.replayBuffer.length < BATCH_SIZE || this.isReplaying) return null;
+                    
+                    this.isReplaying = true;
+                    try {
+                        const { indices, batch, weights } = this.getMiniBatch();
+                        const states = batch.map(e => e.state);
+                        const nextStates = batch.map(e => e.nextState);
+                        const statesTensor = tf.tensor2d(states);
+                        const nextStatesTensor = tf.tensor2d(nextStates);
+                        const mainModelNextQ = this.model.predict(nextStatesTensor);
+                        const targetModelNextQ = this.targetModel.predict(nextStatesTensor);
+                        const currentQ_tensor = this.model.predict(statesTensor);
+                        const [mainModelNextQData, targetModelNextQData, currentQData] = await Promise.all([ mainModelNextQ.array(), targetModelNextQ.array(), currentQ_tensor.array() ]);
+                        const errors = [];
+                        for (let i = 0; i < batch.length; i++) {
+                            const { action, reward, done } = batch[i];
+                            const oldQ = currentQData[i][action];
+                            if (done) { currentQData[i][action] = reward; } 
+                            else {
+                                const bestNextAction = mainModelNextQData[i].indexOf(Math.max(...mainModelNextQData[i]));
+                                const targetQValue = targetModelNextQData[i][bestNextAction];
+                                currentQData[i][action] = reward + (GAMMA ** N_STEP) * targetQValue;
+                            }
+                            errors.push(Math.abs(oldQ - currentQData[i][action]));
+                            this.totalQ += currentQData[i][action];
+                            this.qCount++;
                         }
-                        errors.push(Math.abs(oldQ - currentQData[i][action]));
-                        this.totalQ += currentQData[i][action];
-                        this.qCount++;
+                        for (let i = 0; i < indices.length; i++) { this.priorities[indices[i]] = (errors[i] + PER_EPSILON) ** PER_ALPHA; }
+                        const newQValuesTensor = tf.tensor2d(currentQData);
+                        let loss = null;
+                        const history = await this.model.fit(statesTensor, newQValuesTensor, { verbose: 0, batchSize: BATCH_SIZE, callbacks: { onEpochEnd: (epoch, logs) => { loss = logs.loss; } } });
+                        tf.dispose([statesTensor, nextStatesTensor, mainModelNextQ, targetModelNextQ, currentQ_tensor, newQValuesTensor]);
+                        return loss;
+                    } finally {
+                        this.isReplaying = false;
                     }
-                    for (let i = 0; i < indices.length; i++) { this.priorities[indices[i]] = (errors[i] + PER_EPSILON) ** PER_ALPHA; }
-                    const newQValuesTensor = tf.tensor2d(currentQData);
-                    let loss = null;
-                    const history = await this.model.fit(statesTensor, newQValuesTensor, { verbose: 0, batchSize: BATCH_SIZE, callbacks: { onEpochEnd: (epoch, logs) => { loss = logs.loss; } } });
-                    tf.dispose([statesTensor, nextStatesTensor, mainModelNextQ, targetModelNextQ, currentQ_tensor, newQValuesTensor]);
-                    return loss;
                 }
                 getMiniBatch() {
                     const totalPriority = this.priorities.reduce((a, b) => a + b, 0);
@@ -483,8 +473,9 @@
             let actionCounts = { 0: 0, 1: 0, 2: 0 };
             let totalSteps = 0, currentEpisodeSteps = 0;
 
-            async function runStep() {
+            async function simulationStep() {
                 if (!isTraining) return;
+
                 currentEpisodeSteps++;
                 let state = game.getState();
                 const action = agent.chooseAction(state);
@@ -500,8 +491,7 @@
                     }
                     if (totalSteps % TARGET_UPDATE_FREQUENCY === 0) { agent.updateTargetModel(); }
                 }
-                game.draw();
-                scoreStat.textContent = result.score;
+
                 if (result.done) {
                     episode++;
                     scores.push(game.score);
@@ -509,26 +499,36 @@
                     epsilonHistory.push(agent.epsilon);
                     currentEpisodeSteps = 0;
                     updateUI();
-                    if (episode % 10 === 0) {
-                        console.log(`Ep: ${episode}, Score: ${game.score}, Epsilon: ${agent.epsilon.toFixed(3)}, AvgQ: ${(agent.totalQ / agent.qCount).toFixed(3)}`);
-                    }
                     game.reset();
                 }
-                setTimeout(() => {
-                    animationFrameId = requestAnimationFrame(runStep);
-                }, 1000 / gameSpeed);
+            }
+
+            function animationLoop() {
+                if(isTraining) {
+                    game.draw();
+                    scoreStat.textContent = game.score;
+                }
+                requestAnimationFrame(animationLoop);
+            }
+            
+            function startSimulation() {
+                stopSimulation();
+                const interval = 1000 / gameSpeed;
+                simulationInterval = setInterval(simulationStep, interval);
+            }
+
+            function stopSimulation() {
+                clearInterval(simulationInterval);
             }
 
             function updateUI() {
                 episodeStat.textContent = episode;
                 qValueStat.textContent = agent.qCount > 0 ? (agent.totalQ / agent.qCount).toFixed(2) : "0.00";
                 epsilonStat.textContent = isEvaluating ? "0.00" : agent.epsilon.toFixed(2);
-                
                 updateLineChart(scoreChart, scores);
                 updateLineChart(lossChart, losses);
                 updateLineChart(stepsChart, stepsHistory);
-                updateLineChart(epsilonChart, epsilonHistory, false); // No moving average for epsilon
-
+                updateLineChart(epsilonChart, epsilonHistory, false);
                 actionChart.data.datasets[0].data = Object.values(actionCounts);
                 actionChart.update();
             }
@@ -549,48 +549,110 @@
                 setTimeout(() => { statusToast.className = 'status-toast'; }, 3000);
             }
 
+            async function loadPersistedData() {
+                try {
+                    await agent.loadModel('indexeddb://snake-model');
+                    showToast('✅ Loaded saved model.');
+                } catch {
+                    console.log("❌ No saved model found.");
+                }
+
+                const saved = JSON.parse(localStorage.getItem("snake_stats"));
+                if (saved) {
+                    episode = saved.episode || 0;
+                    scores = saved.scores || [];
+                    losses = saved.losses || [];
+                    stepsHistory = saved.stepsHistory || [];
+                    epsilonHistory = saved.epsilonHistory || [];
+                    actionCounts = saved.actionCounts || {0:0, 1:0, 2:0};
+                    agent.epsilon = saved.epsilon ?? EPSILON_START;
+                    agent.totalQ = saved.totalQ ?? 0;
+                    agent.qCount = saved.qCount ?? 0;
+                    updateUI();
+                    showToast("✅ Loaded saved stats.");
+                }
+            }
+
             trainBtn.addEventListener('click', () => {
                 isTraining = !isTraining;
                 trainBtn.textContent = isTraining ? 'Stop Training' : 'Start Training';
                 trainBtn.classList.toggle('btn-primary');
                 trainBtn.classList.toggle('btn-danger');
-                if (isTraining) { game.reset(); runStep(); } 
-                else { clearTimeout(animationFrameId); }
+                if (isTraining) { 
+                    game.reset(); 
+                    startSimulation();
+                } else { 
+                    stopSimulation();
+                }
             });
             
-            saveBtn.addEventListener('click', async () => {
-                try {
-                    await agent.saveModel('indexeddb://snake-model');
-                    showToast('Model saved successfully!');
-                } catch (e) { showToast('Error saving model.', 'error'); console.error(e); }
-            });
-
-            loadBtn.addEventListener('click', async () => {
-                try {
-                    await agent.loadModel('indexeddb://snake-model');
-                    showToast('Model loaded successfully!');
-                } catch (e) { showToast('No saved model found.', 'error'); console.error(e); }
-            });
-
             downloadBtn.addEventListener('click', async () => {
                 try {
-                    await agent.saveModel('downloads://snake-model');
+                    const lastScore = scores.length > 0 ? scores[scores.length - 1] : 0;
+                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                    const modelName = `snake-model_score_${lastScore}_${timestamp}`;
+                    await agent.model.save(`downloads://${modelName}`);
                 } catch (e) { showToast('Error downloading model.', 'error'); console.error(e); }
             });
 
-            evalToggle.addEventListener('change', (e) => { isEvaluating = e.target.checked; });
-            speedSlider.addEventListener('input', (e) => { gameSpeed = parseInt(e.target.value); speedValue.textContent = gameSpeed; });
+            uploadJsonInput.addEventListener('change', () => jsonFileName.textContent = uploadJsonInput.files[0]?.name || '');
+            uploadWeightsInput.addEventListener('change', () => weightsFileName.textContent = uploadWeightsInput.files[0]?.name || '');
 
-            (async () => {
-                try {
-                    await agent.loadModel('indexeddb://snake-model');
-                    showToast('Previously saved model loaded.', 'success');
-                } catch (e) {
-                    console.log("No saved model found to auto-load.");
+            loadBtn.addEventListener('click', async () => {
+                const jsonFile = uploadJsonInput.files[0];
+                const weightsFile = uploadWeightsInput.files[0];
+                if (!jsonFile || !weightsFile) {
+                    showToast('Please select both model files.', 'error');
+                    return;
                 }
-            })();
+                try {
+                    agent.model = await tf.loadLayersModel(tf.io.browserFiles([jsonFile, weightsFile]));
+                    agent.updateTargetModel();
+                    showToast('Model loaded from files successfully!');
+                } catch (e) {
+                    showToast('Error loading model from files.', 'error');
+                    console.error(e);
+                }
+            });
+            
+            resetBtn.addEventListener('click', async () => {
+                if (confirm("Are you sure you want to reset all progress? This cannot be undone.")) {
+                    isTraining = false;
+                    trainBtn.textContent = 'Start Training';
+                    trainBtn.classList.add('btn-primary');
+                    trainBtn.classList.remove('btn-danger');
+                    stopSimulation();
+                    try {
+                        await tf.io.removeModel('indexeddb://snake-model');
+                        localStorage.removeItem("snake_stats");
+                        showToast('Progress reset successfully!', 'info');
+                        setTimeout(() => location.reload(), 1000);
+                    } catch (e) {
+                        showToast('Could not remove saved model.', 'error');
+                        console.error(e);
+                    }
+                }
+            });
 
-            game.draw();
+            evalToggle.addEventListener('change', (e) => { isEvaluating = e.target.checked; });
+            speedSlider.addEventListener('input', (e) => { 
+                gameSpeed = parseInt(e.target.value); 
+                speedValue.textContent = gameSpeed;
+                if(isTraining) {
+                    startSimulation();
+                }
+            });
+
+            setInterval(() => {
+                if(isTraining && !isEvaluating) {
+                    agent.saveModel('indexeddb://snake-model');
+                    const stats = { episode, scores, losses, stepsHistory, epsilonHistory, actionCounts, epsilon: agent.epsilon, totalQ: agent.totalQ, qCount: agent.qCount };
+                    localStorage.setItem("snake_stats", JSON.stringify(stats));
+                }
+            }, 10000); // Auto-save every 10 seconds
+
+            await loadPersistedData();
+            animationLoop();
         });
     </script>
 </body>
