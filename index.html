@@ -126,8 +126,8 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Left Column: Game and Controls -->
                 <div class="lg:col-span-1 flex flex-col gap-6">
-                    <div class="content-panel p-6 flex justify-center items-center">
-                        <canvas id="gameCanvas" width="400" height="400"></canvas>
+                    <div id="canvas-container" class="content-panel p-4 w-full aspect-square">
+                        <canvas id="gameCanvas"></canvas>
                     </div>
                     <div class="content-panel p-6">
                         <h3 class="text-xl font-semibold text-center mb-4">Control Center</h3>
@@ -218,7 +218,7 @@
             tf.serialization.registerClass(DuelingLayer);
 
             const GRID_SIZE = 20;
-            const TILE_SIZE = 400 / GRID_SIZE;
+            let TILE_SIZE;
             const LEARNING_RATE = 0.001;
             const GAMMA = 0.99;
             const EPSILON_START = 1.0;
@@ -237,6 +237,7 @@
             const ACTION_SIZE = 3;
 
             const canvas = document.getElementById('gameCanvas');
+            const canvasContainer = document.getElementById('canvas-container');
             const ctx = canvas.getContext('2d');
             const trainBtn = document.getElementById('trainBtn');
             const loadBtn = document.getElementById('loadBtn');
@@ -302,18 +303,18 @@
                     const oldDist = Math.abs(this.snake[0].x - this.food.x) + Math.abs(this.snake[0].y - this.food.y);
                     if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE || this.isCollidingWithSnake(head)) {
                         this.gameOver = true;
-                        reward = -1;
+                        reward = -24;
                         return { state: this.getState(), reward, done: this.gameOver, score: this.score };
                     }
                     this.snake.unshift(head);
                     if (head.x === this.food.x && head.y === this.food.y) {
                         this.score++;
-                        reward = 5;
+                        reward = 20;
                         this.food = this.generateFood();
                     } else {
                         this.snake.pop();
                         const newDist = Math.abs(head.x - this.food.x) + Math.abs(head.y - this.food.y);
-                        reward = newDist < oldDist ? 0.01 : -0.01;
+                        reward = newDist < oldDist ? 0.3 : -0.5;
                     }
                     return { state: this.getState(), reward, done: this.gameOver, score: this.score };
                 }
@@ -378,6 +379,7 @@
                     const qValues = new DuelingLayer({}).apply([value, advantages]);
                     const model = tf.model({inputs: input, outputs: qValues});
                     model.compile({optimizer: tf.train.adam(LEARNING_RATE), loss: tf.losses.huberLoss});
+                    model.summary();
                     return model;
                 }
                 updateTargetModel() { this.targetModel.setWeights(this.model.getWeights()); }
@@ -499,15 +501,17 @@
                     epsilonHistory.push(agent.epsilon);
                     currentEpisodeSteps = 0;
                     updateUI();
+                    if (episode % 10 === 0) {
+                        const lastLoss = losses.length > 0 ? losses[losses.length - 1].toFixed(4) : "N/A";
+                        console.log(`Ep: ${episode}, Score: ${game.score}, Epsilon: ${agent.epsilon.toFixed(3)}, AvgQ: ${(agent.totalQ / agent.qCount).toFixed(3)}, Loss: ${lastLoss}`);
+                    }
                     game.reset();
                 }
             }
 
             function animationLoop() {
-                if(isTraining) {
-                    game.draw();
-                    scoreStat.textContent = game.score;
-                }
+                game.draw();
+                scoreStat.textContent = game.score;
                 requestAnimationFrame(animationLoop);
             }
             
@@ -534,6 +538,7 @@
             }
             
             function updateLineChart(chart, data, useMovingAverage = true) {
+                if (!data || data.length === 0) return;
                 chart.data.labels.push(episode);
                 chart.data.datasets[0].data.push(data[data.length - 1]);
                 if(useMovingAverage) {
@@ -571,6 +576,14 @@
                     updateUI();
                     showToast("✅ Loaded saved stats.");
                 }
+            }
+            
+            function resizeCanvas() {
+                const size = canvasContainer.clientWidth;
+                canvas.width = size;
+                canvas.height = size;
+                TILE_SIZE = size / GRID_SIZE;
+                game.draw();
             }
 
             trainBtn.addEventListener('click', () => {
@@ -651,7 +664,10 @@
                 }
             }, 10000); // Auto-save every 10 seconds
 
+            window.addEventListener('resize', resizeCanvas);
+            
             await loadPersistedData();
+            resizeCanvas();
             animationLoop();
         });
     </script>
